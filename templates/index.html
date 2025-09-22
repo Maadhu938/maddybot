@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Maddybot</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="chatbox">
+        <div id="chatlog"></div>
+        <div class="input-area">
+        <input id="userinput" type="text" placeholder="Type your message here..."
+                onkeydown="if(event.key === 'Enter')
+                {sendMessage()}">
+        <button onclick="sendMessage()">Send</button>
+        </div>
+        <script>
+            async function sendMessage(){
+                let input=
+                document.getElementById("userinput");
+                let message=input.value;
+                if(!message)return;
+
+                let chatlog=
+                document.getElementById("chatlog");
+                chatlog.innerHTML+=`<div class="user">${message}</div>`
+
+                let response=await fetch("/get",{
+                    method:"POST",
+                    headers:{"Content-Type":"application/json"},
+                    body:JSON.stringify({message:message})
+                });
+                let data=await response.json();
+                chatlog.innerHTML+=`<div class="Maddy">Maddy:${data.reply}</div>`;
+                input.value="";
+                chatlog.scrollTop=chatlog.scrollHeight;
+                }
+        </script>    
+    </body>
+</html>
