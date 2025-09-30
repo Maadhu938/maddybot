@@ -1,20 +1,45 @@
-from flask import Flask,render_template,request,jsonify
+from flask import Flask, request, jsonify, render_template
+import os
+import requests
+
 app = Flask(__name__)
-def chatbot_response(user_input):
-    responses={
-        "hi":"Hello! How can I assist you today?",
-        "how are you?":"I'm doing great 😁",
-        "bye":"Goodbye! Have a great day!",
-        "what is your name?":"I am Maddy, your friendly chatbot."
+
+# Load Grok API key from environment
+GROK_API_KEY = os.getenv("GROK_API_KEY")
+if not GROK_API_KEY:
+    raise ValueError("GROK_API_KEY not set!")
+
+@app.route("/")
+def index():
+    return render_template("index.html")  # Serve HTML from templates folder
+
+@app.route("/grok", methods=["POST"])
+def grok_chat():
+    data = request.get_json()
+    prompt = data.get("prompt")
+    if not prompt:
+        return jsonify({"reply": "Please provide a prompt!"}), 400
+
+    url = "https://api.groq.com/openai/v1/chat/completions"  # Replace with your Grok endpoint
+    headers = {
+        "Authorization": f"Bearer {GROK_API_KEY}",
+        "Content-Type": "application/json"
     }
-    return responses.get(user_input.lower(),"I'm sorry, I don't understand that.")
-@app.route("/") 
-def home():
-    return render_template("index.html")    
-@app.route("/get",methods=["POST"])
-def get_bot_response():
-    user_input=request.json["message"]
-    response=chatbot_response(user_input)
-    return jsonify({"reply":response})   
-if __name__=="__main__":
-    app.run(debug=True)
+    payload = {"model": "llama-3.3-70b-versatile", "messages": [{"role": "user", "content": prompt}],"max_tokens": 100}
+
+    try:
+        response = requests.post(url, json=payload, headers=headers)
+        response.raise_for_status()
+        result = response.json()
+        choices=result.get("choices")
+        if choices and len(choices) > 0:
+            reply_text = choices[0]["message"]["content"]
+        else:
+            reply_text = "No response from Grok."
+        return jsonify({"reply": reply_text})
+    except requests.exceptions.RequestException as e:
+        return jsonify({"reply": f"Error contacting Grok API: {str(e)}"}), 500
+
+if __name__ == "__main__":
+    # Serve externally if needed: 0.0.0.0
+    app.run(host="127.0.0.1", port=5000, debug=True)

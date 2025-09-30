@@ -4,37 +4,71 @@
     <meta charset="UTF-8">
     <title>Maddybot</title>
     <link rel="stylesheet" href="/static/style.css">
+    <style>
+        .typing {
+            font-style: italic;
+            color: #555;
+        }
+    </style>
 </head>
 <body>
     <div class="chatbox">
         <div id="chatlog"></div>
         <div class="input-area">
-        <input id="userinput" type="text" placeholder="Type your message here..."
-                onkeydown="if(event.key === 'Enter')
-                {sendMessage()}">
-        <button onclick="sendMessage()">Send</button>
+            <input id="userinput" type="text" placeholder="Type your message here..."
+                onkeydown="if(event && event.key === 'Enter') window.sendMessage();">
+            <button onclick="window.sendMessage()">Send</button>
         </div>
-        <script>
-            async function sendMessage(){
-                let input=
-                document.getElementById("userinput");
-                let message=input.value;
-                if(!message)return;
+    </div>
 
-                let chatlog=
-                document.getElementById("chatlog");
-                chatlog.innerHTML+=`<div class="user">${message}</div>`
+    <script>
+        window.sendMessage = async function() {
+            const input = document.getElementById("userinput");
+            const message = input.value.trim();
+            if (!message) return;
 
-                let response=await fetch("/get",{
-                    method:"POST",
-                    headers:{"Content-Type":"application/json"},
-                    body:JSON.stringify({message:message})
+            const chatlog = document.getElementById("chatlog");
+
+            function escapeHTML(text) {
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            }
+
+            // Show user message
+            chatlog.innerHTML += `<div class="user">You: ${escapeHTML(message)}</div>`;
+            chatlog.scrollTop = chatlog.scrollHeight;
+            input.value = "";
+
+            // Add typing indicator
+            const typingDiv = document.createElement("div");
+            typingDiv.className = "Maddy typing";
+            typingDiv.textContent = "Maddy is typing...";
+            chatlog.appendChild(typingDiv);
+            chatlog.scrollTop = chatlog.scrollHeight;
+
+            try {
+                const res = await fetch("/grok", {
+                    method: "POST",
+                    headers: {"Content-Type": "application/json"},
+                    body: JSON.stringify({prompt: message})
                 });
-                let data=await response.json();
-                chatlog.innerHTML+=`<div class="Maddy">Maddy:${data.reply}</div>`;
-                input.value="";
-                chatlog.scrollTop=chatlog.scrollHeight;
-                }
-        </script>    
-    </body>
+                const data = await res.json();
+
+                // Remove typing indicator
+                chatlog.removeChild(typingDiv);
+
+                // Show reply
+                const replyText = escapeHTML(data.reply || "No response");
+                chatlog.innerHTML += `<div class="Maddy">Maddy: ${replyText}</div>`;
+                chatlog.scrollTop = chatlog.scrollHeight;
+
+            } catch (err) {
+                chatlog.removeChild(typingDiv);
+                chatlog.innerHTML += `<div class="Maddy">Maddy: Error: ${escapeHTML(err.message)}</div>`;
+                chatlog.scrollTop = chatlog.scrollHeight;
+            }
+        }
+    </script>
+</body>
 </html>
