@@ -97,3 +97,12 @@ button:hover {
 #chatlog::-webkit-scrollbar-thumb:hover {
     background: #aaa;
 }
+.Maddy pre{
+    background-color: #f5f5f5;
+    padding: 10px;
+    border-radius: 5px;
+    overflow-x: auto;
+}
+.Maddy code{
+    font-family:monospace;
+}

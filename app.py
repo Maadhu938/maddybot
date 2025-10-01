@@ -25,7 +25,7 @@ def grok_chat():
         "Authorization": f"Bearer {GROK_API_KEY}",
         "Content-Type": "application/json"
     }
-    payload = {"model": "llama-3.3-70b-versatile", "messages": [{"role": "user", "content": prompt}],"max_tokens": 100}
+    payload = {"model": "openai/gpt-oss-120b", "messages": [{"role": "user", "content": prompt}],"max_tokens": 1000}
 
     try:
         response = requests.post(url, json=payload, headers=headers)
