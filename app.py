@@ -40,6 +40,3 @@ def grok_chat():
     except requests.exceptions.RequestException as e:
         return jsonify({"reply": f"Error contacting Grok API: {str(e)}"}), 500
 
-if __name__ == "__main__":
-    # Serve externally if needed: 0.0.0.0
-    app.run(host="127.0.0.1", port=5000, debug=True)
