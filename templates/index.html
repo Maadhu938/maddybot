@@ -9,6 +9,7 @@
 </head>
 <body>
     <div class="chatbox">
+
         <!-- Header -->
         <div class="chat-header">
             <div class="header-left">
@@ -21,6 +22,7 @@
                     </span>
                 </div>
             </div>
+
             <button class="clear-btn" onclick="clearChat()" title="Clear chat">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
@@ -37,220 +39,292 @@
             </div>
         </div>
 
-        <!-- Input Area -->
+        <!-- Input -->
         <div class="input-area">
-            <input id="userinput" type="text" placeholder="Type your message here..."
-                onkeydown="if(event && event.key === 'Enter' && !event.shiftKey) window.sendMessage();"
-                autocomplete="off">
+            <input id="userinput"
+                   type="text"
+                   placeholder="Type your message here..."
+                   onkeydown="if(event.key === 'Enter') window.sendMessage();"
+                   autocomplete="off">
+
             <button id="sendBtn" onclick="window.sendMessage()">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <svg width="20" height="20" viewBox="0 0 24 24"
+                     fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
                 </svg>
             </button>
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
-    <script>
-        // Configure marked for syntax highlighting
-        marked.setOptions({
-            highlight: function(code, lang) {
-                if (lang && hljs.getLanguage(lang)) {
-                    return hljs.highlight(code, { language: lang }).value;
-                }
-                return hljs.highlightAuto(code).value;
-            },
-            breaks: true
-        });
 
-        // Conversation history for context
-        let conversationHistory = [];
-        
-        // Load history from localStorage
-        function loadHistory() {
-            const saved = localStorage.getItem('maddybot_history');
-            if (saved) {
-                try {
-                    conversationHistory = JSON.parse(saved);
-                    // Restore chat UI
-                    const chatlog = document.getElementById("chatlog");
-                    if (conversationHistory.length > 0) {
-                        chatlog.innerHTML = ''; // Clear welcome message
-                        conversationHistory.forEach(msg => {
-                            if (msg.role === 'user') {
-                                addMessageToUI('user', msg.content);
-                            } else if (msg.role === 'assistant') {
-                                addMessageToUI('assistant', msg.content);
-                            }
-                        });
-                    }
-                } catch(e) {
-                    conversationHistory = [];
-                }
-            }
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+
+<script>
+
+// Markdown config
+marked.setOptions({
+    highlight: function(code, lang) {
+        if (lang && hljs.getLanguage(lang)) {
+            return hljs.highlight(code, { language: lang }).value;
         }
-        
-        // Save history to localStorage
-        function saveHistory() {
-            localStorage.setItem('maddybot_history', JSON.stringify(conversationHistory));
-        }
+        return hljs.highlightAuto(code).value;
+    },
+    breaks: true
+});
 
-        function escapeHTML(text) {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
+let conversationHistory = [];
 
-        function getTimestamp() {
-            return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        }
 
-        function addMessageToUI(role, content, timestamp = null) {
-            const chatlog = document.getElementById("chatlog");
-            const time = timestamp || getTimestamp();
-            
-            // Remove welcome message if present
-            const welcome = chatlog.querySelector('.welcome-message');
-            if (welcome) welcome.remove();
+/* =========================
+   TIMESTAMP FIX (IMPORTANT)
+========================= */
 
-            const messageDiv = document.createElement('div');
-            messageDiv.className = role === 'user' ? 'user' : 'Maddy';
-            
-            if (role === 'user') {
-                messageDiv.innerHTML = `
-                    <div class="message-content">${escapeHTML(content)}</div>
-                    <span class="timestamp">${time}</span>
-                `;
-            } else {
-                messageDiv.innerHTML = `
-                    <div class="message-header">
-                        <span class="bot-name">Maddy</span>
-                    </div>
-                    <div class="message-content">${marked.parse(content)}</div>
-                    <span class="timestamp">${time}</span>
-                `;
-                // Add copy buttons to code blocks
-                setTimeout(() => addCopyButtons(messageDiv), 0);
-            }
-            
-            messageDiv.classList.add('fade-in');
-            chatlog.appendChild(messageDiv);
-            chatlog.scrollTop = chatlog.scrollHeight;
-        }
+// Local timestamp for user messages
+function getTimestamp() {
+    return new Date().toLocaleTimeString(navigator.language, {
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+}
 
-        function addCopyButtons(container) {
-            container.querySelectorAll('pre').forEach(pre => {
-                if (pre.querySelector('.copy-btn')) return;
-                
-                const btn = document.createElement('button');
-                btn.className = 'copy-btn';
-                btn.innerHTML = '📋 Copy';
-                btn.onclick = async () => {
-                    const code = pre.querySelector('code')?.textContent || pre.textContent;
-                    await navigator.clipboard.writeText(code);
-                    btn.innerHTML = '✓ Copied!';
-                    setTimeout(() => btn.innerHTML = '📋 Copy', 2000);
-                };
-                pre.style.position = 'relative';
-                pre.appendChild(btn);
+// Convert backend UTC -> local time
+function formatTimestamp(utcString) {
+
+    if (!utcString) return getTimestamp();
+
+    const date = new Date(utcString);
+
+    return date.toLocaleTimeString(navigator.language, {
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+}
+
+
+/* =========================
+   STORAGE
+========================= */
+
+function saveHistory() {
+    localStorage.setItem('maddybot_history', JSON.stringify(conversationHistory));
+}
+
+function loadHistory() {
+
+    const saved = localStorage.getItem('maddybot_history');
+
+    if (!saved) return;
+
+    try {
+
+        conversationHistory = JSON.parse(saved);
+
+        const chatlog = document.getElementById("chatlog");
+
+        if (conversationHistory.length > 0) {
+
+            chatlog.innerHTML = '';
+
+            conversationHistory.forEach(msg => {
+                addMessageToUI(msg.role, msg.content, msg.timestamp);
             });
         }
 
-        window.sendMessage = async function() {
-            const input = document.getElementById("userinput");
-            const sendBtn = document.getElementById("sendBtn");
-            const message = input.value.trim();
-            if (!message) return;
+    } catch {
+        conversationHistory = [];
+    }
+}
 
-            const chatlog = document.getElementById("chatlog");
-            
-            // Disable input while processing
-            input.disabled = true;
-            sendBtn.disabled = true;
 
-            // Show user message
-            addMessageToUI('user', message);
-            conversationHistory.push({ role: 'user', content: message });
-            saveHistory();
-            input.value = "";
+/* =========================
+   UI
+========================= */
 
-            // Add typing indicator
-            const typingDiv = document.createElement("div");
-            typingDiv.className = "Maddy typing";
-            typingDiv.innerHTML = `
-                <div class="typing-indicator">
-                    <span></span><span></span><span></span>
-                </div>
-                <span class="typing-text">Maddy is thinking...</span>
-            `;
-            chatlog.appendChild(typingDiv);
-            chatlog.scrollTop = chatlog.scrollHeight;
+function escapeHTML(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
 
-            try {
-                const res = await fetch("/grok", {
-                    method: "POST",
-                    headers: {"Content-Type": "application/json"},
-                    body: JSON.stringify({
-                        prompt: message,
-                        history: conversationHistory.slice(0, -1) // Send history without current message
-                    })
-                });
-                const data = await res.json();
+function addMessageToUI(role, content, timestamp = null) {
 
-                // Remove typing indicator
-                typingDiv.remove();
+    const chatlog = document.getElementById("chatlog");
 
-                // Show reply
-                const replyText = data.reply || "No response";
-                addMessageToUI('assistant', replyText, data.timestamp);
-                conversationHistory.push({ role: 'assistant', content: replyText });
-                saveHistory();
+    const time = timestamp
+        ? formatTimestamp(timestamp)
+        : getTimestamp();
 
-            } catch (err) {
-                typingDiv.remove();
-                addMessageToUI('assistant', `Sorry, I encountered an error: ${err.message}`);
-            } finally {
-                input.disabled = false;
-                sendBtn.disabled = false;
-                input.focus();
-            }
-        }
+    const welcome = chatlog.querySelector('.welcome-message');
+    if (welcome) welcome.remove();
 
-        function clearChat() {
-            if (confirm('Clear all chat history?')) {
-                conversationHistory = [];
-                localStorage.removeItem('maddybot_history');
-                const chatlog = document.getElementById("chatlog");
-                chatlog.innerHTML = `
-                    <div class="welcome-message">
-                        <div class="welcome-avatar">👋</div>
-                        <h2>Hi! I'm Maddy</h2>
-                        <p>Your friendly AI assistant. Ask me anything!</p>
-                    </div>
-                `;
-            }
-        }
+    const messageDiv = document.createElement('div');
+    messageDiv.className = role === 'user' ? 'user' : 'Maddy';
 
-        // Handle mobile keyboard resize
-        function handleResize() {
-            const vh = window.innerHeight;
-            document.documentElement.style.setProperty('--vh', vh + 'px');
-            // Re-scroll to bottom when keyboard opens/closes
-            const chatlog = document.getElementById('chatlog');
-            if (chatlog) {
-                setTimeout(() => { chatlog.scrollTop = chatlog.scrollHeight; }, 100);
-            }
-        }
-        
-        window.addEventListener('resize', handleResize);
-        window.visualViewport?.addEventListener('resize', handleResize);
-        
-        // Initialize on load
-        document.addEventListener('DOMContentLoaded', () => {
-            handleResize();
-            loadHistory();
+    if (role === 'user') {
+
+        messageDiv.innerHTML = `
+            <div class="message-content">${escapeHTML(content)}</div>
+            <span class="timestamp">${time}</span>
+        `;
+
+    } else {
+
+        messageDiv.innerHTML = `
+            <div class="message-header">
+                <span class="bot-name">Maddy</span>
+            </div>
+            <div class="message-content">${marked.parse(content)}</div>
+            <span class="timestamp">${time}</span>
+        `;
+
+        setTimeout(() => addCopyButtons(messageDiv), 0);
+    }
+
+    chatlog.appendChild(messageDiv);
+    chatlog.scrollTop = chatlog.scrollHeight;
+}
+
+
+function addCopyButtons(container) {
+
+    container.querySelectorAll('pre').forEach(pre => {
+
+        if (pre.querySelector('.copy-btn')) return;
+
+        const btn = document.createElement('button');
+        btn.className = 'copy-btn';
+        btn.innerHTML = '📋 Copy';
+
+        btn.onclick = async () => {
+
+            const code = pre.querySelector('code')?.textContent || pre.textContent;
+
+            await navigator.clipboard.writeText(code);
+
+            btn.innerHTML = '✓ Copied!';
+
+            setTimeout(() => btn.innerHTML = '📋 Copy', 2000);
+        };
+
+        pre.style.position = 'relative';
+        pre.appendChild(btn);
+    });
+}
+
+
+/* =========================
+   SEND MESSAGE
+========================= */
+
+window.sendMessage = async function() {
+
+    const input = document.getElementById("userinput");
+    const sendBtn = document.getElementById("sendBtn");
+
+    const message = input.value.trim();
+    if (!message) return;
+
+    input.disabled = true;
+    sendBtn.disabled = true;
+
+    const userTimestamp = new Date().toISOString();
+
+    addMessageToUI('user', message, userTimestamp);
+
+    conversationHistory.push({
+        role: 'user',
+        content: message,
+        timestamp: userTimestamp
+    });
+
+    saveHistory();
+    input.value = "";
+
+    const chatlog = document.getElementById("chatlog");
+
+    const typingDiv = document.createElement("div");
+    typingDiv.className = "Maddy typing";
+    typingDiv.innerHTML = `
+        <div class="typing-indicator">
+            <span></span><span></span><span></span>
+        </div>
+        <span class="typing-text">Maddy is thinking...</span>
+    `;
+
+    chatlog.appendChild(typingDiv);
+    chatlog.scrollTop = chatlog.scrollHeight;
+
+    try {
+
+        const res = await fetch("/grok", {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({
+                prompt: message,
+                history: conversationHistory.slice(0, -1)
+            })
         });
-    </script>
+
+        const data = await res.json();
+
+        typingDiv.remove();
+
+        const replyText = data.reply || "No response";
+
+        addMessageToUI('assistant', replyText, data.timestamp);
+
+        conversationHistory.push({
+            role: 'assistant',
+            content: replyText,
+            timestamp: data.timestamp
+        });
+
+        saveHistory();
+
+    } catch (err) {
+
+        typingDiv.remove();
+
+        addMessageToUI('assistant', `Error: ${err.message}`);
+
+    } finally {
+
+        input.disabled = false;
+        sendBtn.disabled = false;
+        input.focus();
+    }
+}
+
+
+/* =========================
+   CLEAR CHAT
+========================= */
+
+function clearChat() {
+
+    if (!confirm('Clear all chat history?')) return;
+
+    conversationHistory = [];
+    localStorage.removeItem('maddybot_history');
+
+    document.getElementById("chatlog").innerHTML = `
+        <div class="welcome-message">
+            <div class="welcome-avatar">👋</div>
+            <h2>Hi! I'm Maddy</h2>
+            <p>Your friendly AI assistant. Ask me anything!</p>
+        </div>
+    `;
+}
+
+
+/* =========================
+   INIT
+========================= */
+
+document.addEventListener('DOMContentLoaded', loadHistory);
+
+</script>
+
 </body>
 </html>

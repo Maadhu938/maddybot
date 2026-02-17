@@ -1,8 +1,7 @@
 import os
 from flask import Flask, request, jsonify, render_template, session
 import requests
-from datetime import datetime
-
+from datetime import datetime, timezone
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 app = Flask(
     __name__,
@@ -73,7 +72,7 @@ def grok_chat():
             reply_text = "No response from the API."
         return jsonify({
             "reply": reply_text,
-            "timestamp": datetime.now().strftime("%I:%M %p")
+            "timestamp": datetime.now(timezone.utc).isoformat()
         })
     except requests.exceptions.Timeout:
         return jsonify({"reply": "Request timed out. Please try again."}), 504
