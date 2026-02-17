@@ -461,13 +461,10 @@ input[type="text"]:disabled {
     .welcome-avatar {
         font-size: 36px;
     }
+}
 
 /* ========== RESPONSIVE: Mobile (381px to 480px) ========== */
 @media (min-width: 381px) and (max-width: 480px) {
-    body {
-        padding: 0;
-    }
-
     body {
         padding: 0;
     }
