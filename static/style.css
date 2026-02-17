@@ -1,108 +1,592 @@
-@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap');
+
+* {
+    box-sizing: border-box;
+}
+
+html {
+    height: 100%;
+    overflow: hidden;
+}
 
 body {
     font-family: 'Nunito', sans-serif;
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 100vh;
-    background-color: #f4f7f6;
+    height: 100%;
+    height: 100dvh;
+    background-color: #eee;
     margin: 0;
+    padding: 10px;
+    overflow: hidden;
+    position: fixed;
+    width: 100%;
+    top: 0;
+    left: 0;
 }
 
+/* --- Chatbox --- */
 .chatbox {
-    width: 400px;
-    height: 600px;
-    background-color: white;
+    width: 100%;
+    max-width: 500px;
+    height: 90%;
+    max-height: 750px;
+    background-color: #fff;
     display: flex;
     flex-direction: column;
-    border-radius: 15px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    border-radius: 12px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.12);
     overflow: hidden;
 }
 
+/* --- Header --- */
+.chat-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 18px;
+    background-color: #075e54;
+    color: white;
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #25d366;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 18px;
+}
+
+.header-info h1 {
+    margin: 0;
+    font-size: 17px;
+    font-weight: 700;
+}
+
+.status {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 12px;
+    opacity: 0.85;
+}
+
+.status-dot {
+    width: 7px;
+    height: 7px;
+    background: #25d366;
+    border-radius: 50%;
+}
+
+.clear-btn {
+    background: rgba(255,255,255,0.15);
+    border: none;
+    padding: 8px;
+    border-radius: 8px;
+    cursor: pointer;
+    color: white;
+    transition: background 0.2s;
+}
+
+.clear-btn:hover {
+    background: rgba(255,255,255,0.25);
+}
+
+/* --- Chat Log --- */
 #chatlog {
     flex: 1;
-    padding: 20px;
+    min-height: 0; /* crucial for flex scroll */
+    padding: 18px;
     display: flex;
     flex-direction: column;
     overflow-y: auto;
-    gap: 15px;
+    -webkit-overflow-scrolling: touch; /* smooth iOS scroll */
+    overscroll-behavior-y: contain; /* prevent pull-to-refresh */
+    gap: 10px;
     scroll-behavior: smooth;
+    background: #ece5dd;
 }
 
+/* --- Welcome Message --- */
+.welcome-message {
+    text-align: center;
+    padding: 40px 20px;
+    color: #888;
+}
+
+.welcome-avatar {
+    font-size: 44px;
+    margin-bottom: 12px;
+}
+
+.welcome-message h2 {
+    margin: 0 0 6px 0;
+    color: #333;
+    font-size: 22px;
+}
+
+.welcome-message p {
+    margin: 0;
+    font-size: 14px;
+}
+
+/* --- Messages --- */
 .user, .Maddy {
-    padding: 10px 15px;
-    border-radius: 15px;
-    max-width: 70%;
+    border-radius: 10px;
+    max-width: 80%;
     word-wrap: break-word;
 }
 
+/* --- User Message --- */
 .user {
-    background-color: #007bff;
-    color: white;
+    padding: 10px 14px;
+    background-color: #dcf8c6;
+    color: #111;
     align-self: flex-end;
-    border-bottom-right-radius: 5px;
+    border-bottom-right-radius: 3px;
 }
 
+.user .message-content {
+    line-height: 1.45;
+    font-size: 14px;
+}
+
+.user .timestamp {
+    display: block;
+    font-size: 10px;
+    color: #777;
+    text-align: right;
+    margin-top: 4px;
+}
+
+/* --- Maddy Message --- */
 .Maddy {
-    background-color: #e9e9eb;
-    color: black;
+    padding: 10px 14px;
+    background-color: #fff;
+    color: #222;
     align-self: flex-start;
-    border-bottom-left-radius: 5px;
+    border-bottom-left-radius: 3px;
+    line-height: 1.55;
 }
 
+.Maddy .message-header {
+    margin-bottom: 4px;
+}
+
+.Maddy .bot-name {
+    font-weight: 700;
+    color: #075e54;
+    font-size: 12px;
+}
+
+.Maddy .message-content {
+    font-size: 14px;
+}
+
+.Maddy .message-content p {
+    margin: 0 0 8px 0;
+}
+
+.Maddy .message-content p:last-child {
+    margin-bottom: 0;
+}
+
+.Maddy .timestamp {
+    display: block;
+    font-size: 10px;
+    color: #999;
+    margin-top: 6px;
+}
+
+/* --- Lists --- */
+.Maddy ul, .Maddy ol {
+    margin: 6px 0;
+    padding-left: 22px;
+}
+
+.Maddy li {
+    margin-bottom: 4px;
+}
+
+/* --- Typing --- */
+.Maddy.typing {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 14px;
+}
+
+.typing-indicator {
+    display: flex;
+    gap: 4px;
+}
+
+.typing-indicator span {
+    width: 7px;
+    height: 7px;
+    background: #999;
+    border-radius: 50%;
+    animation: bounce 1.4s infinite ease-in-out;
+}
+
+.typing-indicator span:nth-child(1) { animation-delay: 0s; }
+.typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+.typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes bounce {
+    0%, 60%, 100% { transform: translateY(0); }
+    30% { transform: translateY(-6px); }
+}
+
+.typing-text {
+    font-size: 13px;
+    color: #888;
+    font-style: italic;
+}
+
+/* --- Input --- */
 .input-area {
     display: flex;
-    padding: 15px;
-    background-color: #f1f1f1;
+    padding: 10px 14px;
+    padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px)); /* iPhone notch */
+    background-color: #f0f0f0;
     border-top: 1px solid #ddd;
+    gap: 10px;
+    flex-shrink: 0;
 }
 
 input[type="text"] {
     flex: 1;
-    padding: 10px;
+    padding: 10px 16px;
     border: 1px solid #ccc;
-    border-radius: 20px;
-    margin-right: 10px;
-    font-size: 16px;
+    border-radius: 22px;
+    font-size: 14px;
     outline: none;
+    font-family: inherit;
+    background: #fff;
 }
 
-button {
-    padding: 10px 20px;
+input[type="text"]:focus {
+    border-color: #075e54;
+}
+
+input[type="text"]:disabled {
+    background: #eee;
+    cursor: not-allowed;
+}
+
+#sendBtn {
+    width: 44px;
+    height: 44px;
+    padding: 0;
     border: none;
-    background-color: #007bff;
+    background-color: #075e54;
     color: white;
-    border-radius: 20px;
+    border-radius: 50%;
     cursor: pointer;
-    font-size: 16px;
-    font-weight: bold;
-    transition: background-color 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s;
 }
 
-button:hover {
-    background-color: #0056b3;
+#sendBtn:hover:not(:disabled) {
+    background-color: #064e46;
+}
+
+#sendBtn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* --- Scrollbar --- */
+#chatlog::-webkit-scrollbar {
+    width: 5px;
 }
 
 #chatlog::-webkit-scrollbar-track {
-    background: #f1f1f1;
+    background: transparent;
 }
 
 #chatlog::-webkit-scrollbar-thumb {
-    border-radius: 4px;
-    background: #ccc;
+    border-radius: 3px;
+    background: #bbb;
 }
 
 #chatlog::-webkit-scrollbar-thumb:hover {
-    background: #aaa;
+    background: #999;
 }
-.Maddy pre{
-    background-color: #f5f5f5;
-    padding: 10px;
-    border-radius: 5px;
+
+/* --- Code Blocks --- */
+.Maddy pre {
+    background-color: #282c34 !important;
+    padding: 14px;
+    border-radius: 8px;
     overflow-x: auto;
+    white-space: pre;
+    margin: 8px 0;
+    position: relative;
+    max-width: 100%;
 }
-.Maddy code{
-    font-family:monospace;
+
+.Maddy pre code {
+    color: #abb2bf !important;
+    font-family: 'Consolas', 'Monaco', monospace;
+    font-size: 13px;
+    line-height: 1.45;
+    white-space: pre;
+}
+
+.Maddy code {
+    font-family: 'Consolas', 'Monaco', monospace;
+    background: #f0f0f0;
+    padding: 2px 5px;
+    border-radius: 3px;
+    font-size: 13px;
+    color: #c7254e;
+}
+
+.Maddy pre code {
+    background: transparent !important;
+    padding: 0;
+}
+
+.Maddy .message-content {
+    overflow: hidden;
+    max-width: 100%;
+}
+
+/* --- Copy Button --- */
+.copy-btn {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    padding: 3px 8px;
+    font-size: 11px;
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.2);
+    color: #aaa;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.copy-btn:hover {
+    background: rgba(255,255,255,0.2);
+    color: #fff;
+}
+
+/* ========== RESPONSIVE: Mobile Small (up to 380px) ========== */
+@media (max-width: 380px) {
+    body {
+        padding: 0;
+    }
+
+    body {
+        padding: 0;
+    }
+
+    .chatbox {
+        height: 100%;
+        max-height: none;
+        border-radius: 0;
+    }
+
+    .chat-header {
+        padding: 10px 12px;
+        flex-shrink: 0;
+    }
+
+    .avatar {
+        width: 34px;
+        height: 34px;
+        font-size: 15px;
+    }
+
+    .header-info h1 {
+        font-size: 15px;
+    }
+
+    #chatlog {
+        padding: 10px;
+        gap: 8px;
+    }
+
+    .user, .Maddy {
+        max-width: 88%;
+        padding: 8px 10px;
+    }
+
+    .user .message-content,
+    .Maddy .message-content {
+        font-size: 13px;
+    }
+
+    .Maddy pre code {
+        font-size: 11px;
+    }
+
+    .input-area {
+        padding: 8px 10px;
+        padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px));
+        gap: 8px;
+    }
+
+    input[type="text"] {
+        padding: 9px 14px;
+        font-size: 16px; /* 16px prevents iOS zoom on focus */
+    }
+
+    #sendBtn {
+        width: 40px;
+        height: 40px;
+    }
+
+    .welcome-message h2 {
+        font-size: 18px;
+    }
+
+    .welcome-avatar {
+        font-size: 36px;
+    }
+
+/* ========== RESPONSIVE: Mobile (381px to 480px) ========== */
+@media (min-width: 381px) and (max-width: 480px) {
+    body {
+        padding: 0;
+    }
+
+    body {
+        padding: 0;
+    }
+
+    .chatbox {
+        height: 100%;
+        max-height: none;
+        border-radius: 0;
+    }
+
+    #chatlog {
+        padding: 14px;
+    }
+
+    .user, .Maddy {
+        max-width: 85%;
+    }
+
+    input[type="text"] {
+        font-size: 16px;
+    }
+}
+
+/* ========== RESPONSIVE: Tablet (481px to 768px) ========== */
+@media (min-width: 481px) and (max-width: 768px) {
+    body {
+        padding: 15px;
+    }
+
+    .chatbox {
+        max-width: 520px;
+        height: 90%;
+        max-height: 800px;
+    }
+
+    .user, .Maddy {
+        max-width: 80%;
+    }
+}
+
+/* ========== RESPONSIVE: Small Desktop (769px to 1024px) ========== */
+@media (min-width: 769px) and (max-width: 1024px) {
+    .chatbox {
+        max-width: 600px;
+        height: 88%;
+        max-height: 800px;
+    }
+
+    .user, .Maddy {
+        max-width: 75%;
+    }
+
+    .Maddy .message-content {
+        font-size: 15px;
+    }
+}
+
+/* ========== RESPONSIVE: Desktop (1025px+) ========== */
+@media (min-width: 1025px) {
+    .chatbox {
+        max-width: 700px;
+        height: 85%;
+        max-height: 850px;
+    }
+
+    .user, .Maddy {
+        max-width: 70%;
+    }
+
+    .Maddy .message-content {
+        font-size: 15px;
+    }
+
+    .user .message-content {
+        font-size: 15px;
+    }
+}
+
+/* ========== RESPONSIVE: Large Desktop (1440px+) ========== */
+@media (min-width: 1440px) {
+    .chatbox {
+        max-width: 780px;
+        height: 80%;
+        max-height: 900px;
+    }
+}
+
+/* ========== Landscape phone fix ========== */
+@media (max-height: 500px) {
+    body {
+        padding: 0;
+    }
+
+    .chatbox {
+        height: 100%;
+        max-height: none;
+        border-radius: 0;
+    }
+
+    .chat-header {
+        padding: 8px 14px;
+    }
+
+    .avatar {
+        width: 32px;
+        height: 32px;
+        font-size: 14px;
+    }
+
+    .welcome-message {
+        padding: 20px 15px;
+    }
+
+    .welcome-avatar {
+        font-size: 32px;
+        margin-bottom: 8px;
+    }
+
+    .welcome-message h2 {
+        font-size: 18px;
+    }
 }
