@@ -79,7 +79,7 @@ def grok_chat():
     }
 
     payload = {
-        "model": "llama-3.3-70b-versatile",
+        "model": "moonshotai/kimi-k2-instruct-0905",
         "messages": messages,
         "temperature": 0.7,
         "max_tokens": 2048
