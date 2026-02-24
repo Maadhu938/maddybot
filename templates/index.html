@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Maddybot - Your AI Assistant</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css', v='2026-02-24') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
 </head>
 <body>
@@ -110,6 +110,32 @@ function saveHistory() {
     localStorage.setItem('maddybot_history', JSON.stringify(conversationHistory));
 }
 
+function normalizeRole(role) {
+    if (typeof role !== 'string') return null;
+
+    const value = role.trim().toLowerCase();
+
+    if (value === 'user' || value === 'human' || value === 'you') return 'user';
+    if (value === 'assistant' || value === 'bot' || value === 'maddy') return 'assistant';
+
+    return null;
+}
+
+function normalizeHistoryMessage(message) {
+    if (!message || typeof message !== 'object') return null;
+
+    const role = normalizeRole(message.role);
+    const content = typeof message.content === 'string' ? message.content.trim() : '';
+
+    if (!role || !content) return null;
+
+    return {
+        role,
+        content,
+        timestamp: typeof message.timestamp === 'string' ? message.timestamp : null
+    };
+}
+
 function loadHistory() {
 
     const saved = localStorage.getItem('maddybot_history');
@@ -118,7 +144,12 @@ function loadHistory() {
 
     try {
 
-        conversationHistory = JSON.parse(saved);
+        const parsedHistory = JSON.parse(saved);
+        const normalizedHistory = Array.isArray(parsedHistory)
+            ? parsedHistory.map(normalizeHistoryMessage).filter(Boolean)
+            : [];
+
+        conversationHistory = normalizedHistory;
 
         const chatlog = document.getElementById("chatlog");
 
@@ -129,6 +160,10 @@ function loadHistory() {
             conversationHistory.forEach(msg => {
                 addMessageToUI(msg.role, msg.content, msg.timestamp);
             });
+
+        } else {
+
+            localStorage.removeItem('maddybot_history');
         }
 
     } catch {
@@ -150,6 +185,8 @@ function escapeHTML(text) {
 function addMessageToUI(role, content, timestamp = null) {
 
     const chatlog = document.getElementById("chatlog");
+    const normalizedRole = normalizeRole(role) || 'assistant';
+    const safeContent = typeof content === 'string' ? content : String(content ?? '');
 
     const time = timestamp
         ? formatTimestamp(timestamp)
@@ -159,12 +196,12 @@ function addMessageToUI(role, content, timestamp = null) {
     if (welcome) welcome.remove();
 
     const messageDiv = document.createElement('div');
-    messageDiv.className = role === 'user' ? 'user' : 'Maddy';
+    messageDiv.className = normalizedRole === 'user' ? 'user' : 'Maddy';
 
-    if (role === 'user') {
+    if (normalizedRole === 'user') {
 
         messageDiv.innerHTML = `
-            <div class="message-content">${escapeHTML(content)}</div>
+            <div class="message-content">${escapeHTML(safeContent)}</div>
             <span class="timestamp">${time}</span>
         `;
 
@@ -174,7 +211,7 @@ function addMessageToUI(role, content, timestamp = null) {
             <div class="message-header">
                 <span class="bot-name">Maddy</span>
             </div>
-            <div class="message-content">${marked.parse(content)}</div>
+            <div class="message-content">${marked.parse(safeContent)}</div>
             <span class="timestamp">${time}</span>
         `;
 
