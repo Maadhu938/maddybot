@@ -186,8 +186,14 @@ function autoResizeInput() {
     const input = document.getElementById("userinput");
     if (!input) return;
 
+    const chatbox = document.querySelector(".chatbox");
+    const maxHeight = chatbox
+        ? Math.max(140, Math.min(Math.floor(chatbox.clientHeight * 0.35), 260))
+        : 200;
+
     input.style.height = 'auto';
-    input.style.height = `${Math.min(input.scrollHeight, 160)}px`;
+    input.style.height = `${Math.min(input.scrollHeight, maxHeight)}px`;
+    input.style.overflowY = input.scrollHeight > maxHeight ? 'auto' : 'hidden';
 }
 
 window.handleInputKeydown = function(event) {
@@ -384,6 +390,8 @@ document.addEventListener('DOMContentLoaded', () => {
         input.addEventListener('input', autoResizeInput);
         autoResizeInput();
     }
+
+    window.addEventListener('resize', autoResizeInput);
 
     loadHistory();
 });

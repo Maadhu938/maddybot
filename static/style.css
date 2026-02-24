@@ -281,10 +281,17 @@ body {
     font-family: inherit;
     background: #fff;
     min-height: 44px;
-    max-height: 160px;
+    max-height: 260px;
     resize: none;
     overflow-y: auto;
+    -ms-overflow-style: none; /* IE/Edge legacy */
+    scrollbar-width: none; /* Firefox */
     line-height: 1.4;
+}
+
+#userinput::-webkit-scrollbar {
+    width: 0;
+    height: 0;
 }
 
 #userinput:focus {
