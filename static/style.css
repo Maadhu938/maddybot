@@ -161,6 +161,9 @@ body {
 .user .message-content {
     line-height: 1.45;
     font-size: 14px;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    word-break: break-word;
 }
 
 .user .timestamp {
@@ -259,6 +262,7 @@ body {
 /* --- Input --- */
 .input-area {
     display: flex;
+    align-items: flex-end;
     padding: 10px 14px;
     padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px)); /* iPhone notch */
     background-color: #f0f0f0;
@@ -267,7 +271,7 @@ body {
     flex-shrink: 0;
 }
 
-input[type="text"] {
+#userinput {
     flex: 1;
     padding: 10px 16px;
     border: 1px solid #ccc;
@@ -276,13 +280,18 @@ input[type="text"] {
     outline: none;
     font-family: inherit;
     background: #fff;
+    min-height: 44px;
+    max-height: 160px;
+    resize: none;
+    overflow-y: auto;
+    line-height: 1.4;
 }
 
-input[type="text"]:focus {
+#userinput:focus {
     border-color: #075e54;
 }
 
-input[type="text"]:disabled {
+#userinput:disabled {
     background: #eee;
     cursor: not-allowed;
 }
@@ -444,7 +453,7 @@ input[type="text"]:disabled {
         gap: 8px;
     }
 
-    input[type="text"] {
+    #userinput {
         padding: 9px 14px;
         font-size: 16px; /* 16px prevents iOS zoom on focus */
     }
@@ -483,7 +492,7 @@ input[type="text"]:disabled {
         max-width: 85%;
     }
 
-    input[type="text"] {
+    #userinput {
         font-size: 16px;
     }
 }
