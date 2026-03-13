@@ -6,6 +6,7 @@
     <title>Maddybot - Your AI Assistant</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css', v='2026-02-24') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
 </head>
 <body>
     <div class="chatbox">
@@ -59,6 +60,8 @@
 
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
 
 <script>
 
@@ -182,6 +185,61 @@ function escapeHTML(text) {
     return div.innerHTML;
 }
 
+function storeMathToken(raw, tokens) {
+    const token = `MADDYMATHTOKEN${tokens.length}`;
+    tokens.push(raw);
+    return token;
+}
+
+function shouldProtectInlineDollarMath(value) {
+    const trimmed = value.trim();
+    if (!trimmed) return false;
+    if (!/\s/.test(trimmed)) return true;
+    return /[\\^_=+\-*/<>]/.test(trimmed);
+}
+
+function protectMathExpressions(segment, mathTokens) {
+    let processed = segment
+        .replace(/\$\$[\s\S]+?\$\$/g, match => storeMathToken(match, mathTokens))
+        .replace(/\\\[[\s\S]+?\\\]/g, match => storeMathToken(match, mathTokens))
+        .replace(/\\\([\s\S]+?\\\)/g, match => storeMathToken(match, mathTokens));
+
+    processed = processed.replace(/\$([^$\n]+?)\$/g, (match, inner, offset, source) => {
+        const prevChar = source[offset - 1];
+        const nextChar = source[offset + match.length];
+
+        if (prevChar === '\\' || nextChar === '$') return match;
+        if (!shouldProtectInlineDollarMath(inner)) return match;
+
+        return storeMathToken(match, mathTokens);
+    });
+
+    return processed;
+}
+
+function renderMarkdownWithMath(content) {
+    const mathTokens = [];
+    const segments = content.split(/(```[\s\S]*?```|`[^`\n]+`)/g);
+    const protectedContent = segments
+        .map(segment => {
+            if (!segment) return '';
+            if (segment.startsWith('```') || segment.startsWith('`')) return segment;
+            return protectMathExpressions(segment, mathTokens);
+        })
+        .join('');
+
+    const html = marked.parse(protectedContent);
+
+    return html.replace(/MADDYMATHTOKEN(\d+)/g, (_, index) => escapeHTML(mathTokens[Number(index)] || ''));
+}
+
+function preserveTableCopyText(container) {
+    container.querySelectorAll('table th, table td').forEach(cell => {
+        if (cell.dataset.copyText) return;
+        cell.dataset.copyText = cell.innerText.replace(/\s+/g, ' ').trim();
+    });
+}
+
 function wrapTablesInContainer(container) {
     container.querySelectorAll('table').forEach(table => {
         if (table.parentElement?.classList.contains('table-scroll')) return;
@@ -194,9 +252,66 @@ function wrapTablesInContainer(container) {
     });
 }
 
+function renderMath(container) {
+    const content = container.querySelector('.message-content');
+    if (!content || typeof renderMathInElement !== 'function') return;
+
+    renderMathInElement(content, {
+        delimiters: [
+            { left: '$$', right: '$$', display: true },
+            { left: '\\[', right: '\\]', display: true },
+            { left: '\\(', right: '\\)', display: false },
+            { left: '$', right: '$', display: false }
+        ],
+        ignoredTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
+        throwOnError: false,
+        strict: 'ignore'
+    });
+}
+
+function flashCopyButton(button, defaultLabel, successLabel) {
+    button.textContent = successLabel;
+
+    clearTimeout(button._resetTimer);
+    button._resetTimer = setTimeout(() => {
+        button.textContent = defaultLabel;
+    }, 2000);
+}
+
+function getTableCopyText(table) {
+    return Array.from(table.rows)
+        .map(row => Array.from(row.cells)
+            .map(cell => (cell.dataset.copyText || cell.innerText || '').replace(/\s+/g, ' ').trim())
+            .join('\t'))
+        .join('\n');
+}
+
+function addTableCopyButtons(container) {
+    container.querySelectorAll('.table-scroll').forEach(wrapper => {
+        if (wrapper.querySelector('.table-copy-btn')) return;
+
+        const table = wrapper.querySelector('table');
+        if (!table) return;
+
+        const btn = document.createElement('button');
+        btn.className = 'copy-btn table-copy-btn';
+        btn.textContent = 'Copy Table';
+
+        btn.onclick = async () => {
+            await navigator.clipboard.writeText(getTableCopyText(table));
+            flashCopyButton(btn, 'Copy Table', 'Copied!');
+        };
+
+        wrapper.appendChild(btn);
+    });
+}
+
 function enhanceAssistantMessage(container) {
+    preserveTableCopyText(container);
     wrapTablesInContainer(container);
+    renderMath(container);
     addCopyButtons(container);
+    addTableCopyButtons(container);
 }
 
 function autoResizeInput() {
@@ -261,7 +376,7 @@ function addMessageToUI(role, content, timestamp = null) {
             <div class="message-header">
                 <span class="bot-name">Maddy</span>
             </div>
-            <div class="message-content">${marked.parse(safeContent)}</div>
+            <div class="message-content">${renderMarkdownWithMath(safeContent)}</div>
             <span class="timestamp">${time}</span>
         `;
 
@@ -281,17 +396,14 @@ function addCopyButtons(container) {
 
         const btn = document.createElement('button');
         btn.className = 'copy-btn';
-        btn.innerHTML = '📋 Copy';
+        btn.textContent = 'Copy';
 
         btn.onclick = async () => {
 
             const code = pre.querySelector('code')?.textContent || pre.textContent;
 
             await navigator.clipboard.writeText(code);
-
-            btn.innerHTML = '✓ Copied!';
-
-            setTimeout(() => btn.innerHTML = '📋 Copy', 2000);
+            flashCopyButton(btn, 'Copy', 'Copied!');
         };
 
         pre.style.position = 'relative';

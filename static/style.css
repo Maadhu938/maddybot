@@ -380,10 +380,12 @@ body {
 }
 
 .Maddy .table-scroll {
+    position: relative;
     max-width: 100%;
     overflow-x: auto;
     overflow-y: hidden;
     margin: 10px 0;
+    padding-top: 30px;
     border-radius: 8px;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: thin;
@@ -428,6 +430,32 @@ body {
     font-weight: 700;
 }
 
+.Maddy .message-content .katex-display {
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding-bottom: 4px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    scrollbar-color: #b7b7b7 transparent;
+}
+
+.Maddy .message-content .katex-display::-webkit-scrollbar {
+    height: 4px;
+}
+
+.Maddy .message-content .katex-display::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.Maddy .message-content .katex-display::-webkit-scrollbar-thumb {
+    background: #b7b7b7;
+    border-radius: 999px;
+}
+
+.Maddy .message-content .katex-display::-webkit-scrollbar-thumb:hover {
+    background: #999;
+}
+
 .Maddy .message-content {
     overflow: hidden;
     max-width: 100%;
@@ -451,6 +479,19 @@ body {
 .copy-btn:hover {
     background: rgba(255,255,255,0.2);
     color: #fff;
+}
+
+.table-copy-btn {
+    top: 0;
+    right: 0;
+    background: #f3f3f3;
+    border: 1px solid #d7d7d7;
+    color: #555;
+}
+
+.table-copy-btn:hover {
+    background: #e9e9e9;
+    color: #222;
 }
 
 /* ========== RESPONSIVE: Mobile Small (up to 380px) ========== */
