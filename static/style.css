@@ -379,6 +379,55 @@ body {
     padding: 0;
 }
 
+.Maddy .table-scroll {
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    margin: 10px 0;
+    border-radius: 8px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    scrollbar-color: #b7b7b7 transparent;
+}
+
+.Maddy .table-scroll::-webkit-scrollbar {
+    height: 5px;
+}
+
+.Maddy .table-scroll::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.Maddy .table-scroll::-webkit-scrollbar-thumb {
+    background: #b7b7b7;
+    border-radius: 999px;
+}
+
+.Maddy .table-scroll::-webkit-scrollbar-thumb:hover {
+    background: #999;
+}
+
+.Maddy .message-content table {
+    width: max-content;
+    min-width: 100%;
+    border-collapse: collapse;
+    background: #fff;
+}
+
+.Maddy .message-content th,
+.Maddy .message-content td {
+    padding: 8px 10px;
+    border: 1px solid #d7d7d7;
+    text-align: left;
+    vertical-align: top;
+    white-space: nowrap;
+}
+
+.Maddy .message-content th {
+    background: #f4f4f4;
+    font-weight: 700;
+}
+
 .Maddy .message-content {
     overflow: hidden;
     max-width: 100%;

@@ -182,6 +182,23 @@ function escapeHTML(text) {
     return div.innerHTML;
 }
 
+function wrapTablesInContainer(container) {
+    container.querySelectorAll('table').forEach(table => {
+        if (table.parentElement?.classList.contains('table-scroll')) return;
+
+        const wrapper = document.createElement('div');
+        wrapper.className = 'table-scroll';
+
+        table.parentNode.insertBefore(wrapper, table);
+        wrapper.appendChild(table);
+    });
+}
+
+function enhanceAssistantMessage(container) {
+    wrapTablesInContainer(container);
+    addCopyButtons(container);
+}
+
 function autoResizeInput() {
     const input = document.getElementById("userinput");
     if (!input) return;
@@ -248,7 +265,7 @@ function addMessageToUI(role, content, timestamp = null) {
             <span class="timestamp">${time}</span>
         `;
 
-        setTimeout(() => addCopyButtons(messageDiv), 0);
+        enhanceAssistantMessage(messageDiv);
     }
 
     chatlog.appendChild(messageDiv);
